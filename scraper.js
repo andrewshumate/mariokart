@@ -100,7 +100,7 @@ const { drivers, bodies, tires, gliders } = extractedTablesData;
 
 // Create the header row
 const header =
-  "driver,kart,tires,glider,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling";
+  "driver,kart,tires,glider,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling,speed+MT,Pareto Optimal?";
 
 // Generate all possible combinations of the four categories
 const combinations = [];
@@ -121,6 +121,32 @@ for (const driver of drivers) {
       }
     }
   }
+}
+
+for (const combo of combinations) {
+  const speedIndex = header.split(",").indexOf("ground speed");
+  const miniTurboIndex = header.split(",").indexOf("mini-turbo");
+
+  // Add new columns to the combinations
+  const speed = Number(combo[speedIndex]);
+  const miniTurbo = Number(combo[miniTurboIndex]);
+  const speedMiniTurbo = speed + miniTurbo;
+  combo.push(speedMiniTurbo);
+
+  // Add Pareto optimal column
+  combo.push(
+    combinations.every((otherCombo) => {
+      const otherSpeed = Number(otherCombo[speedIndex]);
+      const otherMiniTurbo = Number(otherCombo[miniTurboIndex]);
+      if (speed == otherSpeed) {
+        return miniTurbo >= otherMiniTurbo;
+      } else if (miniTurbo == otherMiniTurbo) {
+        return speed >= otherSpeed;
+      } else {
+        return true;
+      }
+    })
+  );
 }
 
 // Print the header and combinations as a single string with line breaks
