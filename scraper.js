@@ -100,7 +100,7 @@ const { drivers, bodies, tires, gliders } = extractedTablesData;
 
 // Create the header row
 const header =
-  "driver,kart,tires,glider,name,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling";
+  "driver,kart,tires,glider,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling";
 
 // Generate all possible combinations of the four categories
 const combinations = [];
