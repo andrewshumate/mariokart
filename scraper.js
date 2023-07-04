@@ -1,3 +1,12 @@
+/**
+ ** Source: https://chat.openai.com/share/6c6f6aa8-ab4e-4d52-bed8-3394f35ea3b0
+ **
+ ** To use this, copy-paste this entire file into the console on this page:
+ ** https://www.mariowiki.com/Mario_Kart_8_Deluxe_in-game_statistics
+ **
+ ** Copy the log message (right click > "Copy Object") into a CSV file.
+ **/
+
 function extractTableData(table) {
   const rows = table.querySelectorAll("tr");
   const data = [];
