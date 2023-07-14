@@ -109,7 +109,7 @@ var { drivers, bodies, tires, gliders } = extractedTablesData;
 
 // Create the header row
 var header =
-  "driver,kart,tires,glider,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling,speed+MT,Pareto Optimal?";
+  "driver,kart,tires,glider,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling,invincibility,speed+MT,Pareto Optimal?";
 
 var speedIndex = header.split(",").indexOf("ground speed");
 var miniTurboIndex = header.split(",").indexOf("mini-turbo");
