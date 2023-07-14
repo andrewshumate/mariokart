@@ -102,17 +102,17 @@ function extractTablesData(tables) {
   return extractedData;
 }
 
-const tables = document.querySelectorAll("table");
-const extractedTablesData = extractTablesData(tables);
+var tables = document.querySelectorAll("table");
+var extractedTablesData = extractTablesData(tables);
 
-const { drivers, bodies, tires, gliders } = extractedTablesData;
+var { drivers, bodies, tires, gliders } = extractedTablesData;
 
 // Create the header row
-const header =
+var header =
   "driver,kart,tires,glider,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling,speed+MT,Pareto Optimal?";
 
 // Generate all possible combinations of the four categories
-const combinations = [];
+var combinations = [];
 for (const driver of drivers) {
   for (const body of bodies) {
     for (const tire of tires) {
@@ -159,5 +159,5 @@ for (const combo of combinations) {
 }
 
 // Print the header and combinations as a single string with line breaks
-const output = [header, ...combinations.map((row) => row.join(","))].join("\n");
+var output = [header, ...combinations.map((row) => row.join(","))].join("\n");
 console.log(output);
