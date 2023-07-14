@@ -111,14 +111,20 @@ var { drivers, bodies, tires, gliders } = extractedTablesData;
 var header =
   "driver,kart,tires,glider,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling,speed+MT,Pareto Optimal?";
 
-// Generate all possible combinations of the four categories
+var speedIndex = header.split(",").indexOf("ground speed");
+var miniTurboIndex = header.split(",").indexOf("mini-turbo");
+var paretoOptimalIndex = header.split(",").indexOf("Pareto Optimal?");
+
+// Generate all possible combinations of the four categories.
+// Each combo represents a row in the output CSV.
 var combinations = [];
 for (const driver of drivers) {
   for (const body of bodies) {
     for (const tire of tires) {
       for (const glider of gliders) {
-        const combinedData = [driver[0], body[0], tire[0], glider[0]];
-        const sumData = driver.slice(1).map((value, index) => {
+        const combo = [driver[0], body[0], tire[0], glider[0]];
+
+        const comboStats = driver.slice(1).map((value, index) => {
           const bodyValue = Number(body[index + 1]);
           const tireValue = Number(tire[index + 1]);
           const gliderValue = Number(glider[index + 1]);
@@ -126,37 +132,79 @@ for (const driver of drivers) {
           return sum;
         });
 
-        combinations.push([...combinedData, ...sumData]);
+        const speed = Number(comboStats[speedIndex - 4]);
+        const miniTurbo = Number(comboStats[miniTurboIndex - 4]);
+        const speedPlusMiniTurbo = speed + miniTurbo;
+
+        combinations.push([...combo, ...comboStats, speedPlusMiniTurbo]);
       }
     }
   }
 }
 
-for (const combo of combinations) {
-  const speedIndex = header.split(",").indexOf("ground speed");
-  const miniTurboIndex = header.split(",").indexOf("mini-turbo");
+// Parteo optimal pass 1: Determine if there is "free speed" on the table
+combinations.sort((a, b) => {
+  const aSpeed = Number(a[speedIndex]);
+  const bSpeed = Number(b[speedIndex]);
+  if (aSpeed == bSpeed) {
+    const aMiniturbo = Number(a[miniTurboIndex]);
+    const bMiniturbo = Number(b[miniTurboIndex]);
+    return bMiniturbo - aMiniturbo;
+  } else {
+    return bSpeed - aSpeed;
+  }
+});
+combinations.forEach((b, index) => {
+  if (index == 0) {
+    b.push(true);
+  } else {
+    const a = combinations[index - 1];
+    const aSpeed = Number(a[speedIndex]);
+    const bSpeed = Number(b[speedIndex]);
+    const aMiniturbo = Number(a[miniTurboIndex]);
+    const bMiniturbo = Number(b[miniTurboIndex]);
 
-  // Add new columns to the combinations
-  const speed = Number(combo[speedIndex]);
-  const miniTurbo = Number(combo[miniTurboIndex]);
-  const speedMiniTurbo = speed + miniTurbo;
-  combo.push(speedMiniTurbo);
+    if (
+      aSpeed == bSpeed &&
+      (bMiniturbo < aMiniturbo || a[paretoOptimalIndex] == false)
+    ) {
+      b.push(false);
+    } else {
+      b.push(true);
+    }
+  }
+});
 
-  // Add Pareto optimal column
-  combo.push(
-    combinations.every((otherCombo) => {
-      const otherSpeed = Number(otherCombo[speedIndex]);
-      const otherMiniTurbo = Number(otherCombo[miniTurboIndex]);
-      if (speed == otherSpeed) {
-        return miniTurbo >= otherMiniTurbo;
-      } else if (miniTurbo == otherMiniTurbo) {
-        return speed >= otherSpeed;
-      } else {
-        return true;
-      }
-    })
-  );
-}
+// Pareto optimal pass 2: Determine if there is "free mini-turbo" on the table
+// TODO reduce duplication
+combinations.sort((a, b) => {
+  const aMiniturbo = Number(a[miniTurboIndex]);
+  const bMiniturbo = Number(b[miniTurboIndex]);
+  if (aMiniturbo == bMiniturbo) {
+    const aSpeed = Number(a[speedIndex]);
+    const bSpeed = Number(b[speedIndex]);
+    return bSpeed - aSpeed;
+  } else {
+    return bMiniturbo - aMiniturbo;
+  }
+});
+combinations.forEach((b, index) => {
+  if (index == 0) {
+  } else {
+    const a = combinations[index - 1];
+    const aSpeed = Number(a[speedIndex]);
+    const bSpeed = Number(b[speedIndex]);
+    const aMiniturbo = Number(a[miniTurboIndex]);
+    const bMiniturbo = Number(b[miniTurboIndex]);
+
+    if (
+      aMiniturbo == bMiniturbo &&
+      (bSpeed < aSpeed || a[paretoOptimalIndex] == false)
+    ) {
+      b[paretoOptimalIndex] = false;
+    }
+  }
+});
 
 // Print the header and combinations as a single string with line breaks
 var output = [header, ...combinations.map((row) => row.join(","))].join("\n");
