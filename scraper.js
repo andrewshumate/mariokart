@@ -17,7 +17,7 @@ function extractTableData(table) {
     const columns = row.querySelectorAll("td");
 
     // Ignore rows with incorrect number of columns
-    if (columns.length !== 13) {
+    if (columns.length !== 14) {
       continue;
     }
 
