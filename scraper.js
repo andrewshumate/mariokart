@@ -108,12 +108,26 @@ var extractedTablesData = extractTablesData(tables);
 var { drivers, bodies, tires, gliders } = extractedTablesData;
 
 // Create the header row
-var header =
-  "driver,kart,tires,glider,weight,acceleration,on road traction,off road traction,mini-turbo,ground speed,water speed,anti-gravity speed,air speed,ground handling,water handling,anti-gravity handling,air handling,invincibility,speed+MT,Pareto Optimal?";
-
-var speedIndex = header.split(",").indexOf("ground speed");
-var miniTurboIndex = header.split(",").indexOf("mini-turbo");
-var paretoOptimalIndex = header.split(",").indexOf("Pareto Optimal?");
+var header = [
+  "driver",
+  "kart",
+  "tires",
+  "glider",
+  "weight",
+  "acceleration",
+  "on road traction",
+  "off road traction",
+  "mini-turbo",
+  "ground speed",
+  "water speed",
+  "anti-gravity speed",
+  "air speed",
+  "ground handling",
+  "water handling",
+  "anti-gravity handling",
+  "air handling",
+  "invincibility",
+];
 
 // Generate all possible combinations of the four categories.
 // Each combo represents a row in the output CSV.
@@ -132,79 +146,87 @@ for (const driver of drivers) {
           return sum;
         });
 
-        const speed = Number(comboStats[speedIndex - 4]);
-        const miniTurbo = Number(comboStats[miniTurboIndex - 4]);
-        const speedPlusMiniTurbo = speed + miniTurbo;
-
-        combinations.push([...combo, ...comboStats, speedPlusMiniTurbo]);
+        combinations.push([...combo, ...comboStats]);
       }
     }
   }
 }
 
-// Parteo optimal pass 1: Determine if there is "free speed" on the table
-combinations.sort((a, b) => {
-  const aSpeed = Number(a[speedIndex]);
-  const bSpeed = Number(b[speedIndex]);
-  if (aSpeed == bSpeed) {
-    const aMiniturbo = Number(a[miniTurboIndex]);
-    const bMiniturbo = Number(b[miniTurboIndex]);
-    return bMiniturbo - aMiniturbo;
-  } else {
-    return bSpeed - aSpeed;
-  }
-});
-combinations.forEach((b, index) => {
-  if (index == 0) {
-    b.push(true);
-  } else {
-    const a = combinations[index - 1];
-    const aSpeed = Number(a[speedIndex]);
-    const bSpeed = Number(b[speedIndex]);
-    const aMiniturbo = Number(a[miniTurboIndex]);
-    const bMiniturbo = Number(b[miniTurboIndex]);
+function calculateParetoOptimality(stat1, stat2) {
+  header.push(`${stat1} + ${stat2}`);
+  header.push("PO?");
+  const stat1Index = header.indexOf(stat1);
+  const stat2Index = header.indexOf(stat2);
+  const paretoOptimalIndex = header.lastIndexOf("PO?");
 
-    if (
-      aSpeed == bSpeed &&
-      (bMiniturbo < aMiniturbo || a[paretoOptimalIndex] == false)
-    ) {
-      b.push(false);
+  // Parteo optimal pass 1: Determine if there is "free stat1" on the table
+  combinations.sort((a, b) => {
+    const aStat1 = Number(a[stat1Index]);
+    const bStat1 = Number(b[stat1Index]);
+    if (aStat1 == bStat1) {
+      const aStat2 = Number(a[stat2Index]);
+      const bStat2 = Number(b[stat2Index]);
+      return bStat2 - aStat2;
     } else {
+      return bStat1 - aStat1;
+    }
+  });
+  combinations.forEach((b, index) => {
+    const bStat1 = Number(b[stat1Index]);
+    const bStat2 = Number(b[stat2Index]);
+    b.push(bStat1 + bStat2);
+
+    if (index == 0) {
       b.push(true);
-    }
-  }
-});
+    } else {
+      const a = combinations[index - 1];
+      const aStat1 = Number(a[stat1Index]);
+      const aStat2 = Number(a[stat2Index]);
 
-// Pareto optimal pass 2: Determine if there is "free mini-turbo" on the table
-// TODO reduce duplication
-combinations.sort((a, b) => {
-  const aMiniturbo = Number(a[miniTurboIndex]);
-  const bMiniturbo = Number(b[miniTurboIndex]);
-  if (aMiniturbo == bMiniturbo) {
-    const aSpeed = Number(a[speedIndex]);
-    const bSpeed = Number(b[speedIndex]);
-    return bSpeed - aSpeed;
-  } else {
-    return bMiniturbo - aMiniturbo;
-  }
-});
-combinations.forEach((b, index) => {
-  if (index == 0) {
-  } else {
-    const a = combinations[index - 1];
-    const aSpeed = Number(a[speedIndex]);
-    const bSpeed = Number(b[speedIndex]);
-    const aMiniturbo = Number(a[miniTurboIndex]);
-    const bMiniturbo = Number(b[miniTurboIndex]);
-
-    if (
-      aMiniturbo == bMiniturbo &&
-      (bSpeed < aSpeed || a[paretoOptimalIndex] == false)
-    ) {
-      b[paretoOptimalIndex] = false;
+      if (
+        aStat1 == bStat1 &&
+        (bStat2 < aStat2 || a[paretoOptimalIndex] == false)
+      ) {
+        b.push(false);
+      } else {
+        b.push(true);
+      }
     }
-  }
-});
+  });
+
+  // Pareto optimal pass 2: Determine if there is "free stat2" on the table
+  // TODO reduce duplication
+  combinations.sort((a, b) => {
+    const aStat2 = Number(a[stat2Index]);
+    const bStat2 = Number(b[stat2Index]);
+    if (aStat2 == bStat2) {
+      const aStat1 = Number(a[stat1Index]);
+      const bStat1 = Number(b[stat1Index]);
+      return bStat1 - aStat1;
+    } else {
+      return bStat2 - aStat2;
+    }
+  });
+  combinations.forEach((b, index) => {
+    if (index == 0) {
+    } else {
+      const a = combinations[index - 1];
+      const aStat1 = Number(a[stat1Index]);
+      const bStat1 = Number(b[stat1Index]);
+      const aStat2 = Number(a[stat2Index]);
+      const bStat2 = Number(b[stat2Index]);
+
+      if (
+        aStat2 == bStat2 &&
+        (bStat1 < aStat1 || a[paretoOptimalIndex] == false)
+      ) {
+        b[paretoOptimalIndex] = false;
+      }
+    }
+  });
+}
+
+calculateParetoOptimality("mini-turbo", "ground speed");
 
 // Print the header and combinations as a single string with line breaks
 var output = [header, ...combinations.map((row) => row.join(","))].join("\n");
